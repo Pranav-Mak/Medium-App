@@ -2,6 +2,7 @@ import { Hono } from "hono";
 import { PrismaClient } from '@prisma/client/edge'
 import { withAccelerate } from '@prisma/extension-accelerate'
 import { verify } from 'hono/jwt'
+import { createBlogInput, updateBlogInput } from "@pranav.mak/medium-common";
 
 export const blogRouter = new Hono<{
   Bindings:{
@@ -34,6 +35,13 @@ const user = await verify(token, c.env.JWT_SECRET);
 //create blog
 blogRouter.post('/', async (c) => {
   const body = await c.req.json();
+  const {success} = createBlogInput.safeParse(body)
+      if (!success){
+          c.status(403);
+          return c.json({
+             error: "user not found" 
+            });
+      }
   const authorId = c.get("userId") 
   const prisma = new PrismaClient({
     datasourceUrl: c.env.DATABASE_URL,
@@ -60,6 +68,13 @@ blogRouter.post('/', async (c) => {
 //update blog
 blogRouter.put('/', async (c) => {
   const body = await c.req.json();
+  const {success} = updateBlogInput.safeParse(body)
+      if (!success){
+          c.status(403);
+          return c.json({
+             error: "user not found" 
+            });
+      }
   const prisma = new PrismaClient({
     datasourceUrl: c.env.DATABASE_URL,
   }).$extends(withAccelerate())
